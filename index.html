@@ -1,0 +1,1942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Luke's Happy Lawnmower</title>
+  <style>
+    /* ============================================================
+       RESET & BASE STYLES — Bright, Sunny, Kid-Friendly Aesthetic
+       ============================================================ */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      font-family: 'Fredoka', 'Nunito', 'Chalkboard SE', 'Comic Sans MS', ui-rounded, system-ui, -apple-system, sans-serif;
+      background: linear-gradient(180deg, #6dd5fa 0%, #a8edea 38%, #c9f7b5 100%);
+      color: #2b4c2e;
+    }
+
+    /* Full-viewport flex column so the yard expands to fill all remaining space */
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      padding: 6px 8px 8px;
+      gap: 6px;
+      position: relative;
+    }
+
+    /* Decorative floating clouds in the sky background */
+    .sky-decor {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .cloud {
+      position: absolute;
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      opacity: 0.72;
+      animation: driftCloud 36s linear infinite;
+    }
+
+    .cloud-1 { top: 4%; left: -12%; animation-duration: 42s; }
+    .cloud-2 { top: 12%; left: -18%; animation-duration: 54s; animation-delay: -18s; }
+
+    @keyframes driftCloud {
+      from { transform: translateX(0); }
+      to { transform: translateX(125vw); }
+    }
+
+    /* ============================================================
+       TOP HUD BAR — Slim, Compact, High-Contrast
+       ============================================================ */
+    .hud-bar {
+      position: relative;
+      z-index: 5;
+      flex-shrink: 0;
+      width: 100%;
+      max-width: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: nowrap;
+    }
+
+    .hud-pill {
+      background: #ffffff;
+      border: 3px solid #ffffff;
+      border-radius: 999px;
+      box-shadow: 0 4px 0 rgba(43, 76, 46, 0.16), 0 6px 14px rgba(0, 0, 0, 0.08);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      font-weight: 800;
+    }
+
+    .title-pill {
+      background: linear-gradient(180deg, #fffbe0 0%, #ffe885 100%);
+      border-color: #ffd13b;
+      color: #8a4b00;
+      font-size: clamp(0.95rem, 2vw, 1.3rem);
+      white-space: nowrap;
+    }
+
+    .sun-spin {
+      display: inline-block;
+      animation: gentleWiggle 3.2s ease-in-out infinite;
+    }
+
+    @keyframes gentleWiggle {
+      0%, 100% { transform: rotate(-10deg) scale(1); }
+      50% { transform: rotate(12deg) scale(1.12); }
+    }
+
+    .score-pill {
+      background: linear-gradient(180deg, #fff5c2 0%, #ffd95a 100%);
+      border-color: #f6b91f;
+      color: #6f3f00;
+      font-size: clamp(1rem, 2.2vw, 1.35rem);
+      min-width: 96px;
+      justify-content: center;
+      white-space: nowrap;
+    }
+
+    .score-pill.pop {
+      animation: scorePop 0.32s cubic-bezier(0.22, 1.4, 0.36, 1);
+    }
+
+    @keyframes scorePop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.16); }
+      100% { transform: scale(1); }
+    }
+
+    /* Progress Bar Container */
+    .progress-pill {
+      flex: 1 1 auto;
+      max-width: 420px;
+      min-width: 130px;
+      background: #ffffff;
+      border-color: #7cd957;
+      padding: 4px 10px;
+      gap: 8px;
+    }
+
+    .progress-track {
+      flex: 1;
+      height: 18px;
+      background: #e5f5d9;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 2px solid #bce8a2;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #52d64f 0%, #99eb4c 55%, #ffdd3c 100%);
+      transition: width 0.25s ease-out;
+      position: relative;
+    }
+
+    .progress-fill::after {
+      content: "";
+      position: absolute;
+      inset: 3px 6px auto 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.48);
+    }
+
+    .progress-label {
+      font-size: clamp(0.9rem, 1.8vw, 1.15rem);
+      color: #2f7a25;
+      min-width: 44px;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    /* Sound Toggle Button */
+    .sound-btn {
+      cursor: pointer;
+      border: 3px solid #60c5ff;
+      background: linear-gradient(180deg, #ffffff 0%, #dff4ff 100%);
+      border-radius: 999px;
+      width: 44px;
+      height: 44px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.35rem;
+      box-shadow: 0 4px 0 #3aa2e0, 0 6px 14px rgba(0, 0, 0, 0.1);
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .sound-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0 #3aa2e0;
+    }
+
+    .sound-btn.muted {
+      border-color: #f3a6a6;
+      background: linear-gradient(180deg, #fff5f5 0%, #ffe0e0 100%);
+      box-shadow: 0 4px 0 #d67676;
+    }
+
+    /* ============================================================
+       MAIN PLAY STAGE — Full-Bleed Yard + Floating Corner Controls
+       ============================================================ */
+    .play-area {
+      position: relative;
+      z-index: 3;
+      flex: 1 1 auto;
+      width: 100%;
+      height: 100%;
+      max-width: none;
+      min-height: 0;
+      display: flex;
+      align-items: stretch;
+      justify-content: stretch;
+    }
+
+    /* Yard container fills 100% of remaining viewport */
+    .yard-wrapper {
+      flex: 1 1 auto;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      display: flex;
+    }
+
+    .yard-frame {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, #d79c59 0%, #b57636 100%);
+      padding: 6px;
+      border-radius: 22px;
+      border: 4px solid #8f561f;
+      box-shadow: 0 8px 0 rgba(102, 57, 16, 0.24), 0 14px 28px rgba(0, 0, 0, 0.16);
+      display: flex;
+    }
+
+    #gameCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: 15px;
+      background: #47a33e;
+      touch-action: none;
+      cursor: pointer;
+    }
+
+    /* ============================================================
+       FLOATING SEMI-TRANSPARENT DIRECTIONAL CONTROLS
+       ============================================================ */
+    .controls-panel {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      z-index: 10;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.42);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border: 3px solid rgba(255, 255, 255, 0.75);
+      border-radius: 24px;
+      padding: 8px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
+    }
+
+    .dpad-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 56px);
+      grid-template-rows: repeat(2, 50px);
+      gap: 6px;
+      align-items: center;
+      justify-items: center;
+    }
+
+    .dir-btn {
+      width: 56px;
+      height: 50px;
+      border-radius: 16px;
+      border: 3px solid rgba(255, 255, 255, 0.92);
+      font-size: 1.55rem;
+      font-weight: 900;
+      color: #ffffff;
+      opacity: 0.9;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: none;
+      transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.1s ease, opacity 0.1s ease;
+    }
+
+    .dir-btn.up {
+      grid-column: 2;
+      grid-row: 1;
+      background: linear-gradient(180deg, #52d65c 0%, #2eb339 100%);
+      box-shadow: 0 5px 0 #1e8226, 0 6px 12px rgba(0, 0, 0, 0.14);
+    }
+
+    .dir-btn.left {
+      grid-column: 1;
+      grid-row: 2;
+      background: linear-gradient(180deg, #4db8ff 0%, #2492e8 100%);
+      box-shadow: 0 5px 0 #1468ad, 0 6px 12px rgba(0, 0, 0, 0.14);
+    }
+
+    .dir-btn.down {
+      grid-column: 2;
+      grid-row: 2;
+      background: linear-gradient(180deg, #ffbd38 0%, #f09518 100%);
+      box-shadow: 0 5px 0 #b86807, 0 6px 12px rgba(0, 0, 0, 0.14);
+    }
+
+    .dir-btn.right {
+      grid-column: 3;
+      grid-row: 2;
+      background: linear-gradient(180deg, #ff7096 0%, #e64572 100%);
+      box-shadow: 0 5px 0 #ad264d, 0 6px 12px rgba(0, 0, 0, 0.14);
+    }
+
+    .dir-btn.active,
+    .dir-btn:active {
+      opacity: 1;
+      transform: translateY(3px) scale(0.96);
+      box-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
+      filter: brightness(1.08);
+    }
+
+    .hint-badge {
+      display: none;
+    }
+
+    /* Compact screens (phones/small tablets) */
+    @media (max-width: 640px) {
+      .title-pill {
+        display: none;
+      }
+      .app-shell {
+        padding: 4px 6px 6px;
+        gap: 6px;
+      }
+      .controls-panel {
+        bottom: 12px;
+        right: 12px;
+        padding: 6px;
+      }
+      .dpad-grid {
+        grid-template-columns: repeat(3, 50px);
+        grid-template-rows: repeat(2, 46px);
+      }
+      .dir-btn {
+        width: 50px;
+        height: 46px;
+        font-size: 1.35rem;
+      }
+    }
+
+    /* ============================================================
+       CHEERFUL OVERLAYS — Start Screen & Great Job Victory Screen
+       ============================================================ */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(34, 90, 52, 0.45);
+      backdrop-filter: blur(5px);
+      padding: 18px;
+      opacity: 1;
+      transition: opacity 0.28s ease;
+    }
+
+    .overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 480px;
+      background: linear-gradient(180deg, #fffef5 0%, #f4ffe8 100%);
+      border: 6px solid #ffd53d;
+      border-radius: 36px;
+      padding: 28px 24px 30px;
+      text-align: center;
+      box-shadow: 0 14px 0 rgba(196, 137, 14, 0.32), 0 24px 50px rgba(0, 0, 0, 0.25);
+      animation: popIn 0.45s cubic-bezier(0.2, 1.35, 0.4, 1);
+      position: relative;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.75) translateY(20px); opacity: 0; }
+      to   { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    .modal-emoji-row {
+      font-size: clamp(2.8rem, 7vw, 3.8rem);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .bounce-slow {
+      display: inline-block;
+      animation: bounceSlow 1.8s ease-in-out infinite;
+    }
+
+    .bounce-slow:nth-child(2) { animation-delay: 0.25s; }
+    .bounce-slow:nth-child(3) { animation-delay: 0.5s; }
+
+    @keyframes bounceSlow {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .modal-title {
+      font-size: clamp(2rem, 6vw, 2.85rem);
+      font-weight: 900;
+      color: #25872b;
+      text-shadow: 0 3px 0 #d3f7b7;
+      margin-bottom: 10px;
+      line-height: 1.1;
+    }
+
+    .modal-subtitle {
+      font-size: clamp(1.05rem, 3vw, 1.3rem);
+      font-weight: 700;
+      color: #4f7348;
+      margin-bottom: 22px;
+      line-height: 1.4;
+    }
+
+    .big-play-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      max-width: 320px;
+      padding: 18px 28px;
+      font-family: inherit;
+      font-size: clamp(1.5rem, 4.5vw, 2rem);
+      font-weight: 900;
+      color: #ffffff;
+      background: linear-gradient(180deg, #5ce657 0%, #2eb82e 100%);
+      border: 5px solid #ffffff;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: 0 9px 0 #1f871f, 0 16px 28px rgba(31, 135, 31, 0.35);
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+      animation: pulseButton 2s ease-in-out infinite;
+    }
+
+    .big-play-btn:hover {
+      filter: brightness(1.05);
+    }
+
+    .big-play-btn:active {
+      transform: translateY(5px) scale(0.97);
+      box-shadow: 0 4px 0 #1f871f;
+      animation: none;
+    }
+
+    @keyframes pulseButton {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+
+    /* Victory Stars & Final Score */
+    .stars-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: clamp(3rem, 8vw, 4.2rem);
+      margin: 4px 0 12px;
+    }
+
+    .star-item {
+      display: inline-block;
+      filter: drop-shadow(0 5px 0 rgba(214, 152, 0, 0.35));
+      animation: starDance 1.4s ease-in-out infinite;
+    }
+
+    .star-item:nth-child(2) {
+      transform: translateY(-10px) scale(1.18);
+      animation-delay: 0.2s;
+    }
+
+    .star-item:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes starDance {
+      0%, 100% { transform: translateY(0) rotate(-6deg) scale(1); }
+      50% { transform: translateY(-10px) rotate(6deg) scale(1.12); }
+    }
+
+    .final-score-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(180deg, #fff6c9 0%, #ffe066 100%);
+      border: 4px solid #f5b91a;
+      border-radius: 999px;
+      padding: 10px 26px;
+      font-size: clamp(1.4rem, 4vw, 1.9rem);
+      font-weight: 900;
+      color: #7a4400;
+      margin-bottom: 22px;
+      box-shadow: 0 4px 0 rgba(196, 137, 14, 0.25);
+    }
+
+    /* Fullscreen confetti canvas during celebration */
+    #confettiCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 25;
+    }
+  </style>
+</head>
+<body>
+  <!-- Decorative drifting clouds -->
+  <div class="sky-decor" aria-hidden="true">
+    <div class="cloud cloud-1">☁️</div>
+    <div class="cloud cloud-2">☁️</div>
+  </div>
+
+  <!-- Confetti Canvas for Celebrations -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <div class="app-shell">
+    <!-- Top HUD Bar -->
+    <header class="hud-bar">
+      <div class="hud-pill title-pill">
+        <span class="sun-spin">☀️</span>
+        <span>Luke's Happy Lawnmower</span>
+      </div>
+
+      <div class="hud-pill score-pill" id="scorePill" aria-live="polite">
+        <span>⭐</span>
+        <span id="scoreValue">0</span>
+      </div>
+
+      <div class="hud-pill progress-pill" aria-label="Lawn mowed progress">
+        <span style="font-size: 1.35rem;">🌿</span>
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <span class="progress-label" id="progressText">0%</span>
+      </div>
+
+      <button
+        id="soundToggleBtn"
+        class="sound-btn"
+        type="button"
+        aria-label="Toggle Sound"
+        title="Sound On/Off"
+      >🔊</button>
+    </header>
+
+    <!-- Main Play Area: Canvas Yard + Big Kid-Friendly D-Pad -->
+    <main class="play-area">
+      <div class="yard-wrapper" id="yardWrapper">
+        <div class="yard-frame">
+          <canvas id="gameCanvas" aria-label="Lawn mowing yard"></canvas>
+        </div>
+      </div>
+
+      <section class="controls-panel" aria-label="Mower steering controls">
+        <div class="dpad-grid">
+          <button class="dir-btn up" data-dir="up" type="button" aria-label="Drive Up">⬆️</button>
+          <button class="dir-btn left" data-dir="left" type="button" aria-label="Drive Left">⬅️</button>
+          <button class="dir-btn down" data-dir="down" type="button" aria-label="Drive Down">⬇️</button>
+          <button class="dir-btn right" data-dir="right" type="button" aria-label="Drive Right">➡️</button>
+        </div>
+        <div class="hint-badge">
+          <span class="hint-emoji">👆</span>
+          <span>Tap the grass or hold buttons to drive!</span>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Start Game Overlay -->
+  <div class="overlay" id="startOverlay" role="dialog" aria-modal="true" aria-labelledby="startTitle">
+    <div class="modal-card">
+      <div class="modal-emoji-row" aria-hidden="true">
+        <span class="bounce-slow">☀️</span>
+        <span class="bounce-slow">🚜</span>
+        <span class="bounce-slow">🌼</span>
+      </div>
+      <h1 class="modal-title" id="startTitle">Luke's Happy Lawnmower!</h1>
+      <p class="modal-subtitle">
+        Cut the tall green grass, collect pretty flowers, and watch out for the sleepy puppy!
+      </p>
+      <button class="big-play-btn" id="startBtn" type="button">
+        <span>▶️</span>
+        <span>Start Game</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Cheerful Victory / Play Again Overlay -->
+  <div class="overlay hidden" id="winOverlay" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+    <div class="modal-card">
+      <div class="stars-row" aria-hidden="true">
+        <span class="star-item">⭐</span>
+        <span class="star-item">🌟</span>
+        <span class="star-item">⭐</span>
+      </div>
+      <h2 class="modal-title" id="winTitle">Great Job, Luke!</h2>
+      <p class="modal-subtitle">
+        Hooray! The whole yard looks super neat and sunny!
+      </p>
+      <div class="final-score-box">
+        <span>⭐ Score:</span>
+        <span id="finalScoreValue">0</span>
+      </div>
+      <br />
+      <button class="big-play-btn" id="playAgainBtn" type="button">
+        <span>🔄</span>
+        <span>Play Again!</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * ============================================================
+     * HAPPY LAWN MOWER — Single-File HTML5 Game for a 4-Year-Old
+     * ============================================================
+     * Architecture:
+     * 1. SoundFX: Web Audio API synthesizer (purr, snip, chime, boing, fanfare)
+     * 2. Game World: 12x8 logical grid (1200x800 logical space) with smooth HiDPI scaling
+     * 3. Entities: Cute red/yellow mower, swaying grass tufts, bonus flowers/stars,
+     *    friendly obstacles (sleeping puppy, garden rock, mushroom), butterflies, particles
+     * 4. Controls: Tap/drag pointer follow, Arrow/WASD keys, big on-screen D-Pad buttons
+     * 5. Forgiving Win Condition: 90% mowed triggers confetti & fanfare celebration
+     */
+
+    (function () {
+      'use strict';
+
+      /* ------------------------------------------------------------
+         1. WEB AUDIO API SOUND ENGINE (Zero External Audio Files)
+         ------------------------------------------------------------ */
+      class SoundFX {
+        constructor() {
+          this.ctx = null;
+          this.enabled = true;
+          this.initialized = false;
+
+          // Mower continuous purr nodes
+          this.mowerGain = null;
+          this.mowerOsc1 = null;
+          this.mowerOsc2 = null;
+          this.isPurring = false;
+
+          // Cooldowns so sounds stay pleasant and musical
+          this.lastSnipTime = 0;
+          this.lastBoingTime = 0;
+          this.pentatonicIndex = 0;
+          // Cheerful C-major pentatonic frequencies (C5, D5, E5, G5, A5, C6)
+          this.snipNotes = [523.25, 587.33, 659.25, 783.99, 880.0, 1046.5];
+        }
+
+        /** Initialize or resume AudioContext cleanly on first user interaction */
+        init() {
+          try {
+            if (!this.ctx) {
+              const AudioCtx = window.AudioContext || window.webkitAudioContext;
+              if (!AudioCtx) return;
+              this.ctx = new AudioCtx();
+              this._setupMowerPurr();
+              this.initialized = true;
+            }
+            if (this.ctx && this.ctx.state === 'suspended') {
+              this.ctx.resume();
+            }
+          } catch (err) {
+            // Gracefully ignore if browser blocks audio
+          }
+        }
+
+        /** Create a soft, cozy low-volume engine purr that fades in/out smoothly */
+        _setupMowerPurr() {
+          if (!this.ctx) return;
+          try {
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 190;
+
+            const gain = this.ctx.createGain();
+            gain.gain.value = 0.0001;
+
+            const osc1 = this.ctx.createOscillator();
+            osc1.type = 'triangle';
+            osc1.frequency.value = 62;
+
+            const osc2 = this.ctx.createOscillator();
+            osc2.type = 'sine';
+            osc2.frequency.value = 124;
+
+            // Subtle gentle wobble on the purr
+            const lfo = this.ctx.createOscillator();
+            const lfoGain = this.ctx.createGain();
+            lfo.frequency.value = 7.5;
+            lfoGain.gain.value = 3.5;
+            lfo.connect(lfoGain);
+            lfoGain.connect(osc1.frequency);
+
+            osc1.connect(filter);
+            osc2.connect(filter);
+            filter.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc1.start();
+            osc2.start();
+            lfo.start();
+
+            this.mowerOsc1 = osc1;
+            this.mowerOsc2 = osc2;
+            this.mowerGain = gain;
+          } catch (err) {
+            // Ignore audio setup errors
+          }
+        }
+
+        /** Toggle sound on/off for parents */
+        setEnabled(flag) {
+          this.enabled = flag;
+          if (!this.enabled) {
+            this.setMowerMoving(false);
+          }
+        }
+
+        /** Smoothly fade the gentle mower hum in when driving, out when stopped */
+        setMowerMoving(moving) {
+          if (!this.ctx || !this.mowerGain) return;
+          const shouldPurr = moving && this.enabled;
+          if (shouldPurr === this.isPurring) return;
+          this.isPurring = shouldPurr;
+
+          try {
+            const now = this.ctx.currentTime;
+            this.mowerGain.gain.cancelScheduledValues(now);
+            this.mowerGain.gain.setValueAtTime(Math.max(0.0001, this.mowerGain.gain.value), now);
+            this.mowerGain.gain.exponentialRampToValueAtTime(
+              shouldPurr ? 0.055 : 0.0001,
+              now + 0.14
+            );
+          } catch (err) {
+            // Ignore scheduling errors
+          }
+        }
+
+        /** Play a cheerful soft pentatonic "snip/pop" when cutting a grass tile */
+        playGrassSnip() {
+          if (!this.enabled || !this.ctx) return;
+          const nowMs = performance.now();
+          if (nowMs - this.lastSnipTime < 85) return;
+          this.lastSnipTime = nowMs;
+
+          try {
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            const freq = this.snipNotes[this.pentatonicIndex % this.snipNotes.length];
+            this.pentatonicIndex = (this.pentatonicIndex + 1) % this.snipNotes.length;
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq * 0.92, now);
+            osc.frequency.exponentialRampToValueAtTime(freq * 1.05, now + 0.09);
+
+            gain.gain.setValueAtTime(0.001, now);
+            gain.gain.linearRampToValueAtTime(0.09, now + 0.015);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.16);
+          } catch (err) {}
+        }
+
+        /** Play a happy sparkling musical chime when collecting a flower or star */
+        playBonusChime() {
+          if (!this.enabled || !this.ctx) return;
+          try {
+            const now = this.ctx.currentTime;
+            const notes = [659.25, 783.99, 1046.5, 1318.5];
+            notes.forEach((freq, idx) => {
+              const t = now + idx * 0.065;
+              const osc = this.ctx.createOscillator();
+              const gain = this.ctx.createGain();
+
+              osc.type = 'triangle';
+              osc.frequency.setValueAtTime(freq, t);
+
+              gain.gain.setValueAtTime(0.001, t);
+              gain.gain.linearRampToValueAtTime(0.13, t + 0.02);
+              gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+
+              osc.connect(gain);
+              gain.connect(this.ctx.destination);
+
+              osc.start(t);
+              osc.stop(t + 0.3);
+            });
+          } catch (err) {}
+        }
+
+        /** Play a silly, gentle cartoon "boing" when bumping a puppy, rock, or fence */
+        playBoing() {
+          if (!this.enabled || !this.ctx) return;
+          const nowMs = performance.now();
+          if (nowMs - this.lastBoingTime < 520) return;
+          this.lastBoingTime = nowMs;
+
+          try {
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(170, now);
+            osc.frequency.exponentialRampToValueAtTime(360, now + 0.09);
+            osc.frequency.exponentialRampToValueAtTime(210, now + 0.18);
+            osc.frequency.exponentialRampToValueAtTime(290, now + 0.26);
+
+            gain.gain.setValueAtTime(0.001, now);
+            gain.gain.linearRampToValueAtTime(0.14, now + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.32);
+          } catch (err) {}
+        }
+
+        /** Play a joyful celebratory fanfare melody when the lawn is complete! */
+        playVictoryFanfare() {
+          if (!this.enabled || !this.ctx) return;
+          try {
+            const now = this.ctx.currentTime;
+            const melody = [
+              { freq: 523.25, time: 0.0,  dur: 0.16 }, // C5
+              { freq: 659.25, time: 0.14, dur: 0.16 }, // E5
+              { freq: 783.99, time: 0.28, dur: 0.16 }, // G5
+              { freq: 1046.5, time: 0.44, dur: 0.22 }, // C6
+              { freq: 783.99, time: 0.68, dur: 0.15 }, // G5
+              { freq: 1046.5, time: 0.84, dur: 0.55 }  // C6!
+            ];
+
+            melody.forEach((n) => {
+              const t = now + n.time;
+              const osc = this.ctx.createOscillator();
+              const gain = this.ctx.createGain();
+
+              osc.type = 'triangle';
+              osc.frequency.setValueAtTime(n.freq, t);
+
+              gain.gain.setValueAtTime(0.001, t);
+              gain.gain.linearRampToValueAtTime(0.16, t + 0.03);
+              gain.gain.exponentialRampToValueAtTime(0.001, t + n.dur);
+
+              osc.connect(gain);
+              gain.connect(this.ctx.destination);
+
+              osc.start(t);
+              osc.stop(t + n.dur + 0.04);
+            });
+          } catch (err) {}
+        }
+      }
+
+      /* ------------------------------------------------------------
+         2. CONSTANTS & DOM REFERENCES
+         ------------------------------------------------------------ */
+      const GRID_COLS = 12;
+      const GRID_ROWS = 8;
+      const TILE_SIZE = 100;
+      const WORLD_W = GRID_COLS * TILE_SIZE; // 1200 logical px
+      const WORLD_H = GRID_ROWS * TILE_SIZE; // 800 logical px
+      const WIN_PERCENTAGE = 90; // Forgiving 90% threshold for a 4-year-old
+
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const yardWrapper = document.getElementById('yardWrapper');
+
+      const confettiCanvas = document.getElementById('confettiCanvas');
+      const confettiCtx = confettiCanvas.getContext('2d');
+
+      const scoreValueEl = document.getElementById('scoreValue');
+      const scorePillEl = document.getElementById('scorePill');
+      const progressFillEl = document.getElementById('progressFill');
+      const progressTextEl = document.getElementById('progressText');
+      const soundToggleBtn = document.getElementById('soundToggleBtn');
+
+      const startOverlay = document.getElementById('startOverlay');
+      const winOverlay = document.getElementById('winOverlay');
+      const startBtn = document.getElementById('startBtn');
+      const playAgainBtn = document.getElementById('playAgainBtn');
+      const finalScoreValueEl = document.getElementById('finalScoreValue');
+
+      const sound = new SoundFX();
+
+      /* ------------------------------------------------------------
+         3. GAME STATE
+         ------------------------------------------------------------ */
+      const state = {
+        phase: 'start', // 'start' | 'playing' | 'won'
+        score: 0,
+        totalMowable: 0,
+        mowedCount: 0,
+        percentMowed: 0,
+        time: 0,
+
+        // Grid of tiles: { col, row, type: 'grass' | 'obstacle', mowed: bool, tufts: [] }
+        grid: [],
+        obstacles: [],
+        bonuses: [],
+        butterflies: [],
+        particles: [],
+        floatingTexts: [],
+        confetti: [],
+
+        // Cute red & yellow lawn mower
+        mower: {
+          x: WORLD_W / 2,
+          y: WORLD_H / 2,
+          angle: 0,
+          speed: 225, // Slow, gentle, easy to steer for a 4-year-old
+          radius: 34,
+          moving: false,
+          wobblePhase: 0,
+          bumpFlash: 0
+        },
+
+        // Inputs
+        keys: { up: false, down: false, left: false, right: false },
+        dpad: { up: false, down: false, left: false, right: false },
+        pointerTarget: null, // { x, y } when tapping/dragging on the lawn
+        pointerDown: false
+      };
+
+      /* ------------------------------------------------------------
+         4. LAWN GENERATION — Fresh Yard Every Round
+         ------------------------------------------------------------ */
+      function generateLawn() {
+        state.score = 0;
+        state.mowedCount = 0;
+        state.totalMowable = 0;
+        state.percentMowed = 0;
+        state.grid = [];
+        state.obstacles = [];
+        state.bonuses = [];
+        state.particles = [];
+        state.floatingTexts = [];
+        state.pointerTarget = null;
+
+        // Place mower cleanly near the center
+        const startCol = Math.floor(GRID_COLS / 2);
+        const startRow = Math.floor(GRID_ROWS / 2);
+        state.mower.x = (startCol + 0.5) * TILE_SIZE;
+        state.mower.y = (startRow + 0.5) * TILE_SIZE;
+        state.mower.angle = 0;
+        state.mower.moving = false;
+        state.mower.bumpFlash = 0;
+
+        // Build base grid of tall grass tiles with cute swaying grass tufts
+        for (let r = 0; r < GRID_ROWS; r++) {
+          const rowArr = [];
+          for (let c = 0; c < GRID_COLS; c++) {
+            const tufts = [];
+            for (let t = 0; t < 5; t++) {
+              tufts.push({
+                ox: 14 + Math.random() * 72,
+                oy: 18 + Math.random() * 68,
+                h: 12 + Math.random() * 10,
+                shade: Math.random() > 0.5 ? '#267827' : '#2e8c2f',
+                phase: Math.random() * Math.PI * 2
+              });
+            }
+            rowArr.push({
+              col: c,
+              row: r,
+              type: 'grass',
+              mowed: false,
+              tufts
+            });
+          }
+          state.grid.push(rowArr);
+        }
+
+        // Helper to pick a safe tile away from the mower start & other obstacles
+        const usedObstacleCoords = new Set();
+        const isSafeForObstacle = (c, r) => {
+          // Keep away from edges slightly so mower never gets trapped in corners
+          if (c < 1 || c > GRID_COLS - 2 || r < 1 || r > GRID_ROWS - 2) return false;
+          // Keep away from start area
+          if (Math.abs(c - startCol) <= 1 && Math.abs(r - startRow) <= 1) return false;
+          // Keep obstacles spaced apart so mower always has wide open paths
+          for (const obs of state.obstacles) {
+            if (Math.abs(obs.col - c) <= 2 && Math.abs(obs.row - r) <= 1) return false;
+          }
+          return !usedObstacleCoords.has(`${c},${r}`);
+        };
+
+        // Add 2–3 friendly, non-punishing obstacles (sleeping puppy + garden rock + optional mushroom)
+        const obstacleDefs = [
+          { kind: 'puppy', emoji: '🐶', label: 'Zzz' },
+          { kind: 'rock',  emoji: '🪨', label: '' },
+          { kind: 'shroom', emoji: '🍄', label: '' }
+        ];
+
+        const obstacleCount = Math.random() > 0.45 ? 3 : 2;
+        for (let i = 0; i < obstacleCount; i++) {
+          for (let tries = 0; tries < 50; tries++) {
+            const c = 1 + Math.floor(Math.random() * (GRID_COLS - 2));
+            const r = 1 + Math.floor(Math.random() * (GRID_ROWS - 2));
+            if (isSafeForObstacle(c, r)) {
+              usedObstacleCoords.add(`${c},${r}`);
+              state.grid[r][c].type = 'obstacle';
+              state.obstacles.push({
+                col: c,
+                row: r,
+                x: (c + 0.5) * TILE_SIZE,
+                y: (r + 0.5) * TILE_SIZE,
+                radius: 38,
+                bounce: 0,
+                ...obstacleDefs[i]
+              });
+              break;
+            }
+          }
+        }
+
+        // Count total mowable grass tiles
+        for (let r = 0; r < GRID_ROWS; r++) {
+          for (let c = 0; c < GRID_COLS; c++) {
+            if (state.grid[r][c].type === 'grass') {
+              state.totalMowable++;
+            }
+          }
+        }
+
+        // Mow the starting tile directly under the mower so it looks natural
+        mowTileAt(startCol, startRow, true);
+
+        // Scatter 7 cheerful collectible bonus flowers & stars
+        const bonusEmojis = ['🌼', '🌸', '🌻', '⭐', '🌼', '🌸', '⭐'];
+        const usedBonusCoords = new Set([`${startCol},${startRow}`]);
+        bonusEmojis.forEach((emoji) => {
+          for (let tries = 0; tries < 40; tries++) {
+            const c = Math.floor(Math.random() * GRID_COLS);
+            const r = Math.floor(Math.random() * GRID_ROWS);
+            const key = `${c},${r}`;
+            if (state.grid[r][c].type === 'grass' && !usedBonusCoords.has(key)) {
+              usedBonusCoords.add(key);
+              state.bonuses.push({
+                x: (c + 0.5) * TILE_SIZE + (Math.random() * 18 - 9),
+                y: (r + 0.5) * TILE_SIZE + (Math.random() * 18 - 9),
+                emoji,
+                collected: false,
+                bobPhase: Math.random() * Math.PI * 2,
+                points: emoji === '⭐' ? 15 : 10
+              });
+              break;
+            }
+          }
+        });
+
+        // Create 3 fluttering butterflies drifting lazily across the yard
+        state.butterflies = [];
+        for (let i = 0; i < 3; i++) {
+          state.butterflies.push({
+            x: Math.random() * WORLD_W,
+            y: Math.random() * WORLD_H,
+            vx: (Math.random() > 0.5 ? 1 : -1) * (24 + Math.random() * 18),
+            vy: (Math.random() - 0.5) * 20,
+            flapPhase: Math.random() * Math.PI * 2,
+            turnTimer: 1 + Math.random() * 3
+          });
+        }
+
+        updateHUD();
+      }
+
+      /* ------------------------------------------------------------
+         5. MOWING, SCORING & PARTICLES
+         ------------------------------------------------------------ */
+      function mowTileAt(col, row, silent = false) {
+        if (col < 0 || col >= GRID_COLS || row < 0 || row >= GRID_ROWS) return;
+        const tile = state.grid[row][col];
+        if (tile.type !== 'grass' || tile.mowed) return;
+
+        tile.mowed = true;
+        state.mowedCount++;
+        state.percentMowed = Math.min(100, Math.round((state.mowedCount / state.totalMowable) * 100));
+
+        if (!silent) {
+          addScore(1);
+          sound.playGrassSnip();
+          spawnGrassClippings((col + 0.5) * TILE_SIZE, (row + 0.5) * TILE_SIZE);
+        }
+
+        updateHUD();
+
+        // Forgiving win condition at 90% so kids always feel successful!
+        if (state.phase === 'playing' && state.percentMowed >= WIN_PERCENTAGE) {
+          triggerWin();
+        }
+      }
+
+      function addScore(amount, pop = false) {
+        state.score += amount;
+        scoreValueEl.textContent = state.score;
+        if (pop) {
+          scorePillEl.classList.remove('pop');
+          void scorePillEl.offsetWidth; // restart CSS animation
+          scorePillEl.classList.add('pop');
+        }
+      }
+
+      function updateHUD() {
+        scoreValueEl.textContent = state.score;
+        const displayPercent = state.phase === 'won' ? 100 : state.percentMowed;
+        progressFillEl.style.width = `${displayPercent}%`;
+        progressTextEl.textContent = `${displayPercent}%`;
+      }
+
+      function spawnGrassClippings(x, y) {
+        const colors = ['#78e048', '#4ec438', '#a8f05b', '#39a82a'];
+        for (let i = 0; i < 8; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 45 + Math.random() * 95;
+          state.particles.push({
+            x,
+            y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 35,
+            size: 5 + Math.random() * 6,
+            color: colors[i % colors.length],
+            life: 0.55 + Math.random() * 0.25,
+            maxLife: 0.8,
+            kind: 'clipping',
+            rot: Math.random() * Math.PI,
+            vrot: (Math.random() - 0.5) * 10
+          });
+        }
+      }
+
+      function spawnSparkles(x, y) {
+        const colors = ['#ffe140', '#ff85b3', '#66e0ff', '#ffffff', '#ffb830'];
+        for (let i = 0; i < 16; i++) {
+          const angle = (Math.PI * 2 * i) / 16 + Math.random() * 0.2;
+          const speed = 60 + Math.random() * 110;
+          state.particles.push({
+            x,
+            y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            size: 7 + Math.random() * 7,
+            color: colors[i % colors.length],
+            life: 0.7 + Math.random() * 0.3,
+            maxLife: 1.0,
+            kind: 'sparkle',
+            rot: 0,
+            vrot: 4
+          });
+        }
+      }
+
+      function spawnFloatingText(x, y, text) {
+        state.floatingTexts.push({
+          x,
+          y,
+          text,
+          life: 1.0,
+          maxLife: 1.0
+        });
+      }
+
+      function triggerWin() {
+        state.phase = 'won';
+        sound.setMowerMoving(false);
+        sound.playVictoryFanfare();
+
+        // Magically finish any remaining few grass blades with sparkles
+        for (let r = 0; r < GRID_ROWS; r++) {
+          for (let c = 0; c < GRID_COLS; c++) {
+            if (state.grid[r][c].type === 'grass' && !state.grid[r][c].mowed) {
+              state.grid[r][c].mowed = true;
+              spawnSparkles((c + 0.5) * TILE_SIZE, (r + 0.5) * TILE_SIZE);
+            }
+          }
+        }
+        state.percentMowed = 100;
+        updateHUD();
+
+        // Launch colorful confetti!
+        spawnConfetti();
+        finalScoreValueEl.textContent = state.score;
+
+        // Show victory screen after a brief cheerful moment
+        setTimeout(() => {
+          if (state.phase === 'won') {
+            winOverlay.classList.remove('hidden');
+          }
+        }, 550);
+      }
+
+      /* ------------------------------------------------------------
+         6. CONFETTI SYSTEM (Celebration)
+         ------------------------------------------------------------ */
+      function spawnConfetti() {
+        state.confetti = [];
+        const colors = ['#ff595e', '#ffca3a', '#8ac926', '#1982c4', '#ff85c0', '#ffffff'];
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        for (let i = 0; i < 110; i++) {
+          state.confetti.push({
+            x: Math.random() * w,
+            y: -20 - Math.random() * h * 0.6,
+            vx: (Math.random() - 0.5) * 90,
+            vy: 110 + Math.random() * 140,
+            size: 8 + Math.random() * 9,
+            color: colors[i % colors.length],
+            rot: Math.random() * Math.PI * 2,
+            vrot: (Math.random() - 0.5) * 7
+          });
+        }
+      }
+
+      function updateAndDrawConfetti(dt) {
+        confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+        if (state.confetti.length === 0) return;
+
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        for (const c of state.confetti) {
+          c.x += c.vx * dt;
+          c.y += c.vy * dt;
+          c.rot += c.vrot * dt;
+
+          // Keep confetti fluttering continuously while on victory screen
+          if (c.y > h + 20) {
+            if (state.phase === 'won') {
+              c.y = -15;
+              c.x = Math.random() * w;
+            }
+          }
+
+          confettiCtx.save();
+          confettiCtx.translate(c.x, c.y);
+          confettiCtx.rotate(c.rot);
+          confettiCtx.fillStyle = c.color;
+          confettiCtx.fillRect(-c.size / 2, -c.size * 0.32, c.size, c.size * 0.64);
+          confettiCtx.restore();
+        }
+      }
+
+      /* ------------------------------------------------------------
+         7. UPDATE LOOP (Movement, Collisions, Butterflies, Particles)
+         ------------------------------------------------------------ */
+      function update(dt) {
+        state.time += dt;
+
+        // Update fluttering butterflies (even on start screen for liveliness)
+        for (const b of state.butterflies) {
+          b.flapPhase += dt * 15;
+          b.turnTimer -= dt;
+          if (b.turnTimer <= 0) {
+            b.turnTimer = 1.5 + Math.random() * 2.5;
+            const angle = Math.random() * Math.PI * 2;
+            const spd = 26 + Math.random() * 22;
+            b.vx = Math.cos(angle) * spd;
+            b.vy = Math.sin(angle) * spd;
+          }
+          b.x += b.vx * dt;
+          b.y += b.vy * dt;
+          if (b.x < 30) b.vx = Math.abs(b.vx);
+          if (b.x > WORLD_W - 30) b.vx = -Math.abs(b.vx);
+          if (b.y < 30) b.vy = Math.abs(b.vy);
+          if (b.y > WORLD_H - 30) b.vy = -Math.abs(b.vy);
+        }
+
+        // Update particles
+        for (let i = state.particles.length - 1; i >= 0; i--) {
+          const p = state.particles[i];
+          p.life -= dt;
+          if (p.life <= 0) {
+            state.particles.splice(i, 1);
+            continue;
+          }
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+          if (p.kind === 'clipping') {
+            p.vy += 170 * dt; // soft gravity
+          }
+          p.rot += p.vrot * dt;
+        }
+
+        // Update floating score texts
+        for (let i = state.floatingTexts.length - 1; i >= 0; i--) {
+          const ft = state.floatingTexts[i];
+          ft.life -= dt;
+          ft.y -= 42 * dt;
+          if (ft.life <= 0) state.floatingTexts.splice(i, 1);
+        }
+
+        // Decay obstacle bounce animations
+        for (const obs of state.obstacles) {
+          if (obs.bounce > 0) obs.bounce = Math.max(0, obs.bounce - dt * 3.5);
+        }
+
+        if (state.phase !== 'playing') {
+          sound.setMowerMoving(false);
+          return;
+        }
+
+        const mower = state.mower;
+        if (mower.bumpFlash > 0) mower.bumpFlash = Math.max(0, mower.bumpFlash - dt * 4);
+
+        // Determine desired movement vector from Keyboard / D-Pad / Pointer Follow
+        let dx = 0;
+        let dy = 0;
+
+        if (state.keys.up || state.dpad.up) dy -= 1;
+        if (state.keys.down || state.dpad.down) dy += 1;
+        if (state.keys.left || state.dpad.left) dx -= 1;
+        if (state.keys.right || state.dpad.right) dx += 1;
+
+        if (dx !== 0 || dy !== 0) {
+          // Direct button/key steering cancels tap-to-go target
+          state.pointerTarget = null;
+          const len = Math.hypot(dx, dy);
+          dx /= len;
+          dy /= len;
+        } else if (state.pointerTarget) {
+          const toX = state.pointerTarget.x - mower.x;
+          const toY = state.pointerTarget.y - mower.y;
+          const dist = Math.hypot(toX, toY);
+          if (dist > 14) {
+            dx = toX / dist;
+            dy = toY / dist;
+          } else {
+            // Arrived gently at tapped spot
+            if (!state.pointerDown) {
+              state.pointerTarget = null;
+            }
+          }
+        }
+
+        const isMoving = dx !== 0 || dy !== 0;
+        mower.moving = isMoving;
+        sound.setMowerMoving(isMoving);
+
+        if (isMoving) {
+          mower.wobblePhase += dt * 16;
+
+          // Smoothly rotate mower toward movement direction
+          const targetAngle = Math.atan2(dy, dx);
+          let angleDiff = targetAngle - mower.angle;
+          while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+          while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+          mower.angle += angleDiff * Math.min(1, dt * 11);
+
+          // Proposed new position
+          let nextX = mower.x + dx * mower.speed * dt;
+          let nextY = mower.y + dy * mower.speed * dt;
+          let bumped = false;
+
+          // Soft fence boundary check
+          const margin = mower.radius + 10;
+          if (nextX < margin) { nextX = margin; bumped = true; }
+          if (nextX > WORLD_W - margin) { nextX = WORLD_W - margin; bumped = true; }
+          if (nextY < margin) { nextY = margin; bumped = true; }
+          if (nextY > WORLD_H - margin) { nextY = WORLD_H - margin; bumped = true; }
+
+          // Gentle circular collision against friendly obstacles (slides smoothly around!)
+          for (const obs of state.obstacles) {
+            const ox = nextX - obs.x;
+            const oy = nextY - obs.y;
+            const dist = Math.hypot(ox, oy);
+            const minDist = mower.radius + obs.radius;
+            if (dist < minDist) {
+              const nx = dist > 0.001 ? ox / dist : 1;
+              const ny = dist > 0.001 ? oy / dist : 0;
+              nextX = obs.x + nx * minDist;
+              nextY = obs.y + ny * minDist;
+              obs.bounce = 1;
+              bumped = true;
+            }
+          }
+
+          mower.x = nextX;
+          mower.y = nextY;
+
+          if (bumped) {
+            mower.bumpFlash = 1;
+            sound.playBoing();
+          }
+        }
+
+        // Mow any grass tile touched by the mower's generous cutting deck
+        const cutRadius = 36;
+        const minCol = Math.max(0, Math.floor((mower.x - cutRadius) / TILE_SIZE));
+        const maxCol = Math.min(GRID_COLS - 1, Math.floor((mower.x + cutRadius) / TILE_SIZE));
+        const minRow = Math.max(0, Math.floor((mower.y - cutRadius) / TILE_SIZE));
+        const maxRow = Math.min(GRID_ROWS - 1, Math.floor((mower.y + cutRadius) / TILE_SIZE));
+
+        for (let r = minRow; r <= maxRow; r++) {
+          for (let c = minCol; c <= maxCol; c++) {
+            const cx = (c + 0.5) * TILE_SIZE;
+            const cy = (r + 0.5) * TILE_SIZE;
+            if (Math.hypot(mower.x - cx, mower.y - cy) < TILE_SIZE * 0.62) {
+              mowTileAt(c, r);
+            }
+          }
+        }
+
+        // Collect bonus flowers & stars
+        for (const bonus of state.bonuses) {
+          if (bonus.collected) continue;
+          if (Math.hypot(mower.x - bonus.x, mower.y - bonus.y) < 52) {
+            bonus.collected = true;
+            addScore(bonus.points, true);
+            sound.playBonusChime();
+            spawnSparkles(bonus.x, bonus.y);
+            spawnFloatingText(bonus.x, bonus.y - 18, `+${bonus.points} ⭐`);
+          }
+        }
+      }
+
+      /* ------------------------------------------------------------
+         8. RENDERING (Bright, Chunky, Adorable HTML5 Canvas Art)
+         ------------------------------------------------------------ */
+      function draw() {
+        // Map logical 1200x800 yard coordinates cleanly onto the full-bleed HiDPI canvas
+        ctx.setTransform(canvas.width / WORLD_W, 0, 0, canvas.height / WORLD_H, 0, 0);
+        ctx.clearRect(0, 0, WORLD_W, WORLD_H);
+
+        // 1. Draw Grass Grid (Tall dark-green tufts vs Neat striped mowed lawn)
+        for (let r = 0; r < GRID_ROWS; r++) {
+          for (let c = 0; c < GRID_COLS; c++) {
+            const tile = state.grid[r][c];
+            const x = c * TILE_SIZE;
+            const y = r * TILE_SIZE;
+
+            if (tile.mowed || tile.type === 'obstacle') {
+              // Neat striped freshly mowed lawn (alternating cheerful lime greens)
+              ctx.fillStyle = c % 2 === 0 ? '#97e35b' : '#86d64b';
+              ctx.fillRect(x, y, TILE_SIZE + 0.5, TILE_SIZE + 0.5);
+
+              // Subtle freshly-cut horizontal sheen lines
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.14)';
+              ctx.fillRect(x, y + 18, TILE_SIZE, 6);
+              ctx.fillRect(x, y + 64, TILE_SIZE, 6);
+            } else {
+              // Lush tall dark-green grass tile
+              ctx.fillStyle = (c + r) % 2 === 0 ? '#3f9c39' : '#399133';
+              ctx.fillRect(x, y, TILE_SIZE + 0.5, TILE_SIZE + 0.5);
+
+              // Cute swaying grass blades / tufts
+              for (const tuft of tile.tufts) {
+                const sway = Math.sin(state.time * 2.4 + tuft.phase) * 3.5;
+                const tx = x + tuft.ox;
+                const ty = y + tuft.oy;
+                ctx.strokeStyle = tuft.shade;
+                ctx.lineWidth = 4.5;
+                ctx.lineCap = 'round';
+
+                ctx.beginPath();
+                ctx.moveTo(tx, ty);
+                ctx.quadraticCurveTo(tx - 6 + sway, ty - tuft.h * 0.6, tx - 8 + sway, ty - tuft.h);
+                ctx.moveTo(tx, ty);
+                ctx.quadraticCurveTo(tx + sway * 0.8, ty - tuft.h * 0.7, tx + sway, ty - tuft.h - 3);
+                ctx.moveTo(tx, ty);
+                ctx.quadraticCurveTo(tx + 6 + sway, ty - tuft.h * 0.6, tx + 8 + sway, ty - tuft.h + 1);
+                ctx.stroke();
+              }
+            }
+          }
+        }
+
+        // 2. Draw soft tap target indicator so kids see where they tapped
+        if (state.pointerTarget && state.phase === 'playing') {
+          const pulse = 1 + Math.sin(state.time * 8) * 0.14;
+          ctx.save();
+          ctx.translate(state.pointerTarget.x, state.pointerTarget.y);
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+          ctx.lineWidth = 5;
+          ctx.beginPath();
+          ctx.arc(0, 0, 22 * pulse, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.fillStyle = 'rgba(255, 232, 92, 0.75)';
+          ctx.beginPath();
+          ctx.arc(0, 0, 8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        // 3. Draw Collectible Bonus Flowers & Stars
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        for (const bonus of state.bonuses) {
+          if (bonus.collected) continue;
+          const bob = Math.sin(state.time * 3.5 + bonus.bobPhase) * 4;
+          ctx.save();
+          ctx.translate(bonus.x, bonus.y + bob);
+
+          // Soft sunny glow under collectible
+          ctx.fillStyle = 'rgba(255, 245, 130, 0.42)';
+          ctx.beginPath();
+          ctx.arc(0, 4, 24, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.font = '44px sans-serif';
+          ctx.fillText(bonus.emoji, 0, 2);
+          ctx.restore();
+        }
+
+        // 4. Draw Friendly Obstacles (Sleeping Puppy on Blanket, Garden Rock, Mushroom)
+        for (const obs of state.obstacles) {
+          const scale = 1 + Math.sin(obs.bounce * Math.PI) * 0.16;
+          ctx.save();
+          ctx.translate(obs.x, obs.y);
+          ctx.scale(scale, scale);
+
+          if (obs.kind === 'puppy') {
+            // Cozy pastel picnic blanket under the sleeping puppy
+            ctx.fillStyle = '#ff9ebb';
+            roundRect(ctx, -40, -34, 80, 68, 16);
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            // Cute blanket stripe
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+            ctx.fillRect(-36, -8, 72, 16);
+
+            ctx.font = '50px sans-serif';
+            ctx.fillText(obs.emoji, 0, 2);
+
+            // Floating sleepy "zZz"
+            const zBob = (state.time * 16) % 22;
+            ctx.font = 'bold 18px sans-serif';
+            ctx.fillStyle = '#4f6d9a';
+            ctx.globalAlpha = 1 - zBob / 22;
+            ctx.fillText('z', 26, -18 - zBob);
+            ctx.globalAlpha = 1;
+          } else if (obs.kind === 'rock') {
+            // Soft shadow + garden rock + tiny flower accents
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.16)';
+            ctx.beginPath();
+            ctx.ellipse(0, 18, 36, 16, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.font = '58px sans-serif';
+            ctx.fillText(obs.emoji, 0, 0);
+          } else {
+            // Cute red mushroom spot
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.14)';
+            ctx.beginPath();
+            ctx.ellipse(0, 20, 30, 13, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.font = '54px sans-serif';
+            ctx.fillText(obs.emoji, 0, 0);
+          }
+
+          ctx.restore();
+        }
+
+        // 5. Draw the Cute Chunky Red & Yellow Lawn Mower!
+        drawLawnMower(state.mower);
+
+        // 6. Draw Grass Clippings & Sparkle Particles
+        for (const p of state.particles) {
+          const alpha = Math.max(0, p.life / p.maxLife);
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.fillStyle = p.color;
+
+          if (p.kind === 'clipping') {
+            ctx.fillRect(-p.size / 2, -2.5, p.size, 5);
+          } else {
+            // Cute 4-point star sparkle
+            ctx.beginPath();
+            for (let i = 0; i < 4; i++) {
+              const a = (i * Math.PI) / 2;
+              ctx.lineTo(Math.cos(a) * p.size, Math.sin(a) * p.size);
+              ctx.lineTo(Math.cos(a + Math.PI / 4) * (p.size * 0.35), Math.sin(a + Math.PI / 4) * (p.size * 0.35));
+            }
+            ctx.closePath();
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+
+        // 7. Draw Fluttering Butterflies Drifting Lazily Overhead
+        for (const b of state.butterflies) {
+          const wingScale = 0.78 + Math.sin(b.flapPhase) * 0.22;
+          ctx.save();
+          ctx.translate(b.x, b.y);
+          ctx.scale(b.vx < 0 ? -wingScale : wingScale, 1);
+          ctx.font = '32px sans-serif';
+          ctx.fillText('🦋', 0, 0);
+          ctx.restore();
+        }
+
+        // 8. Draw Floating Bonus Score Popups
+        for (const ft of state.floatingTexts) {
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, ft.life / ft.maxLife);
+          ctx.font = '900 30px sans-serif';
+          ctx.lineWidth = 6;
+          ctx.strokeStyle = '#ffffff';
+          ctx.strokeText(ft.text, ft.x, ft.y);
+          ctx.fillStyle = '#ff8800';
+          ctx.fillText(ft.text, ft.x, ft.y);
+          ctx.restore();
+        }
+
+        // 9. Smiling Sun peeking cheerfully in the top-right corner of the yard
+        ctx.save();
+        const sunScale = 1 + Math.sin(state.time * 2.5) * 0.06;
+        ctx.translate(WORLD_W - 44, 44);
+        ctx.scale(sunScale, sunScale);
+        ctx.font = '48px sans-serif';
+        ctx.fillText('☀️', 0, 0);
+        ctx.restore();
+      }
+/** Draw a top-down Husqvarna orange riding lawn mower */
+      function drawLawnMower(m) {
+        ctx.save();
+        ctx.translate(m.x, m.y);
+
+        // Gentle playful wobble while driving
+        const wobbleY = m.moving ? Math.sin(m.wobblePhase) * 2.5 : 0;
+        const wobbleTilt = m.moving ? Math.sin(m.wobblePhase * 0.5) * 0.055 : 0;
+        const bumpScale = 1 + m.bumpFlash * 0.08;
+
+        ctx.translate(0, wobbleY);
+        ctx.rotate(m.angle + wobbleTilt);
+        ctx.scale(bumpScale, bumpScale);
+
+        // 1. Soft drop shadow on the grass
+        ctx.fillStyle = 'rgba(20, 60, 20, 0.24)';
+        roundRect(ctx, -38, -32, 78, 68, 20);
+        ctx.fill();
+
+        // 2. Side-discharge mower deck (underneath the middle)
+        ctx.fillStyle = '#2b2f36';
+        ctx.strokeStyle = '#181a1f';
+        ctx.lineWidth = 3;
+        roundRect(ctx, -14, -31, 28, 62, 10);
+        ctx.fill();
+        ctx.stroke();
+
+        // Side discharge chute sticking out the right side (+Y)
+        ctx.fillStyle = '#1e2126';
+        roundRect(ctx, -8, 28, 16, 9, 4);
+        ctx.fill();
+
+        // 3. Tractor Wheels (Big chunky rear tires, smaller front tires)
+        // Rear tires (-X)
+        ctx.fillStyle = '#1e2226';
+        roundRect(ctx, -34, -29, 22, 11, 5);
+        ctx.fill();
+        roundRect(ctx, -34, 18, 22, 11, 5);
+        ctx.fill();
+
+        // Front tires (+X)
+        roundRect(ctx, 16, -24, 15, 8, 4);
+        ctx.fill();
+        roundRect(ctx, 16, 16, 15, 8, 4);
+        ctx.fill();
+
+        // 4. Main Husqvarna Orange Rear Fender & Body
+        ctx.fillStyle = '#f26522'; // Signature Husqvarna Orange
+        ctx.strokeStyle = '#b54008';
+        ctx.lineWidth = 3.5;
+        roundRect(ctx, -34, -21, 38, 42, 10);
+        ctx.fill();
+        ctx.stroke();
+
+        // Dark charcoal floorboards (middle foot area)
+        ctx.fillStyle = '#2d3436';
+        roundRect(ctx, -8, -18, 16, 36, 5);
+        ctx.fill();
+
+        // 5. Front Engine Hood (Husqvarna Orange)
+        ctx.fillStyle = '#f26522';
+        ctx.strokeStyle = '#b54008';
+        ctx.lineWidth = 3.5;
+        roundRect(ctx, 4, -17, 32, 34, 12);
+        ctx.fill();
+        ctx.stroke();
+
+        // Dark charcoal hood vent / stripe
+        ctx.fillStyle = '#2b2f36';
+        roundRect(ctx, 12, -8, 16, 16, 5);
+        ctx.fill();
+
+        // Silver grille lines on the hood
+        ctx.strokeStyle = '#a4b0be';
+        ctx.lineWidth = 2;
+        for (let vy = -4; vy <= 4; vy += 4) {
+          ctx.beginPath();
+          ctx.moveTo(15, vy);
+          ctx.lineTo(25, vy);
+          ctx.stroke();
+        }
+
+        // 6. Bright Headlights on the front edge (+X)
+        ctx.fillStyle = '#fff6b3';
+        ctx.strokeStyle = '#d4a600';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.ellipse(35, -9, 2.5, 4.5, 0, 0, Math.PI * 2);
+        ctx.ellipse(35, 9, 2.5, 4.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // 7. Steering Column & Steering Wheel
+        ctx.strokeStyle = '#181a1f';
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.moveTo(6, 0);
+        ctx.lineTo(-2, 0);
+        ctx.stroke();
+
+        ctx.strokeStyle = '#22252a';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.ellipse(-3, 0, 5, 10, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 8. High-Back Black Driver's Seat
+        ctx.fillStyle = '#2b2f36';
+        ctx.strokeStyle = '#141619';
+        ctx.lineWidth = 2.5;
+        // Seat cushion
+        roundRect(ctx, -27, -12, 16, 24, 6);
+        ctx.fill();
+        ctx.stroke();
+        // Seat backrest
+        ctx.fillStyle = '#1c1f24';
+        roundRect(ctx, -32, -13, 8, 26, 4);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.restore();
+      }
+      /** Cross-browser rounded rectangle helper */
+      function roundRect(context, x, y, w, h, r) {
+        context.beginPath();
+        context.moveTo(x + r, y);
+        context.lineTo(x + w - r, y);
+        context.quadraticCurveTo(x + w, y, x + w, y + r);
+        context.lineTo(x + w, y + h - r);
+        context.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        context.lineTo(x + r, y + h);
+        context.quadraticCurveTo(x, y + h, x, y + h - r);
+        context.lineTo(x, y + r);
+        context.quadraticCurveTo(x, y, x + r, y);
+        context.closePath();
+      }
+
+      /* ------------------------------------------------------------
+         9. RESPONSIVE CANVAS SIZING (HiDPI Full-Bleed on All Devices)
+         ------------------------------------------------------------ */
+      function resizeCanvases() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+        // Match internal canvas resolution to the full-bleed CSS size for crisp rendering
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+        canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+
+        // Confetti canvas matches viewport
+        confettiCanvas.width = Math.floor(window.innerWidth * dpr);
+        confettiCanvas.height = Math.floor(window.innerHeight * dpr);
+        confettiCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      /* ------------------------------------------------------------
+         10. INPUT HANDLERS (Pointer/Touch Follow, Keyboard, D-Pad)
+         ------------------------------------------------------------ */
+      function getLogicalCoords(clientX, clientY) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: ((clientX - rect.left) / rect.width) * WORLD_W,
+          y: ((clientY - rect.top) / rect.height) * WORLD_H
+        };
+      }
+
+      // Pointer / Touch Follow on the Yard Canvas
+      canvas.addEventListener('pointerdown', (e) => {
+        sound.init();
+        if (state.phase !== 'playing') return;
+        e.preventDefault();
+        state.pointerDown = true;
+        state.pointerTarget = getLogicalCoords(e.clientX, e.clientY);
+        canvas.setPointerCapture(e.pointerId);
+      });
+
+      canvas.addEventListener('pointermove', (e) => {
+        if (!state.pointerDown || state.phase !== 'playing') return;
+        e.preventDefault();
+        state.pointerTarget = getLogicalCoords(e.clientX, e.clientY);
+      });
+
+      const endPointer = () => {
+        state.pointerDown = false;
+      };
+      canvas.addEventListener('pointerup', endPointer);
+      canvas.addEventListener('pointercancel', endPointer);
+
+      // Keyboard Controls (Arrow Keys + WASD)
+      const keyMap = {
+        ArrowUp: 'up', KeyW: 'up',
+        ArrowDown: 'down', KeyS: 'down',
+        ArrowLeft: 'left', KeyA: 'left',
+        ArrowRight: 'right', KeyD: 'right'
+      };
+
+      window.addEventListener('keydown', (e) => {
+        const dir = keyMap[e.code];
+        if (dir) {
+          e.preventDefault();
+          sound.init();
+          state.keys[dir] = true;
+        }
+      });
+
+      window.addEventListener('keyup', (e) => {
+        const dir = keyMap[e.code];
+        if (dir) {
+          state.keys[dir] = false;
+        }
+      });
+
+      // Big On-Screen D-Pad Buttons (supports mouse hold & touch hold)
+      document.querySelectorAll('.dir-btn').forEach((btn) => {
+        const dir = btn.dataset.dir;
+        const press = (e) => {
+          e.preventDefault();
+          sound.init();
+          state.dpad[dir] = true;
+          btn.classList.add('active');
+        };
+        const release = (e) => {
+          e.preventDefault();
+          state.dpad[dir] = false;
+          btn.classList.remove('active');
+        };
+
+        btn.addEventListener('pointerdown', press);
+        btn.addEventListener('pointerup', release);
+        btn.addEventListener('pointerleave', release);
+        btn.addEventListener('pointercancel', release);
+      });
+
+      // Sound Toggle Button
+      soundToggleBtn.addEventListener('click', () => {
+        sound.init();
+        const nextState = !sound.enabled;
+        sound.setEnabled(nextState);
+        soundToggleBtn.textContent = nextState ? '🔊' : '🔇';
+        soundToggleBtn.classList.toggle('muted', !nextState);
+      });
+
+      // Start & Play Again Buttons
+      function startNewGame() {
+        sound.init();
+        startOverlay.classList.add('hidden');
+        winOverlay.classList.add('hidden');
+        state.confetti = [];
+        generateLawn();
+        state.phase = 'playing';
+        sound.playBonusChime();
+      }
+
+      startBtn.addEventListener('click', startNewGame);
+      playAgainBtn.addEventListener('click', startNewGame);
+
+      /* ------------------------------------------------------------
+         11. MAIN ANIMATION LOOP
+         ------------------------------------------------------------ */
+      let lastTime = 0;
+      function gameLoop(timestamp) {
+        if (!lastTime) lastTime = timestamp;
+        const dt = Math.min(0.05, (timestamp - lastTime) / 1000);
+        lastTime = timestamp;
+
+        update(dt);
+        draw();
+        updateAndDrawConfetti(dt);
+
+        requestAnimationFrame(gameLoop);
+      }
+
+      // Initialize everything cleanly on window load
+      window.addEventListener('resize', resizeCanvases);
+      window.onload = function () {
+        generateLawn();
+        resizeCanvases();
+        requestAnimationFrame(gameLoop);
+      };
+    })();
+  </script>
+</body>
+</html>
