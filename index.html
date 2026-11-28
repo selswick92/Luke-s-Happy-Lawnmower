@@ -649,10 +649,10 @@
      * Architecture:
      * 1. SoundFX: Web Audio API synthesizer (purr, snip, chime, boing, fanfare)
      * 2. Game World: 12x8 logical grid (1200x800 logical space) with smooth HiDPI scaling
-     * 3. Entities: Cute red/yellow mower, swaying grass tufts, bonus flowers/stars,
-     *    friendly obstacles (sleeping puppy, garden rock, mushroom), butterflies, particles
+     * 3. Entities: Husqvarna orange riding mower with side-chute spray, swaying grass tufts,
+     *    bonus flowers/stars, friendly obstacles (sleeping puppy, garden rock, mushroom), butterflies, particles
      * 4. Controls: Tap/drag pointer follow, Arrow/WASD keys, big on-screen D-Pad buttons
-     * 5. Forgiving Win Condition: 90% mowed triggers confetti & fanfare celebration
+     * 5. Forgiving Win Condition: 100% mowed triggers confetti & fanfare celebration
      */
 
     (function () {
@@ -926,6 +926,9 @@
 
       const sound = new SoundFX();
 
+      // Stores all active grass clippings flying out of the side chute
+      const chuteClippings = [];
+
       /* ------------------------------------------------------------
          3. GAME STATE
          ------------------------------------------------------------ */
@@ -946,7 +949,7 @@
         floatingTexts: [],
         confetti: [],
 
-        // Cute red & yellow lawn mower
+        // Husqvarna orange riding mower
         mower: {
           x: WORLD_W / 2,
           y: WORLD_H / 2,
@@ -979,6 +982,7 @@
         state.particles = [];
         state.floatingTexts = [];
         state.pointerTarget = null;
+        chuteClippings.length = 0;
 
         // Place mower cleanly near the center
         const startCol = Math.floor(GRID_COLS / 2);
@@ -1070,7 +1074,7 @@
         mowTileAt(startCol, startRow, true);
 
         // Scatter 7 cheerful collectible bonus flowers & stars
-        const bonusEmojis = ['🌼', '🌸', '🌻', '⭐', '🌼', '🌸', '⭐'];
+        const bonusEmojis = ['🌼', '🌸', '🌻', '🍂', '🌼', '🌸', '🍂'];
         const usedBonusCoords = new Set([`${startCol},${startRow}`]);
         bonusEmojis.forEach((emoji) => {
           for (let tries = 0; tries < 40; tries++) {
@@ -1085,7 +1089,7 @@
                 emoji,
                 collected: false,
                 bobPhase: Math.random() * Math.PI * 2,
-                points: emoji === '⭐' ? 15 : 10
+                points: emoji === '🍂' ? 15 : 10
               });
               break;
             }
@@ -1128,7 +1132,6 @@
 
         updateHUD();
 
-        // Forgiving win condition at 90% so kids always feel successful!
         if (state.phase === 'playing' && state.percentMowed >= WIN_PERCENTAGE) {
           triggerWin();
         }
@@ -1597,7 +1600,7 @@
           ctx.restore();
         }
 
-        // 5. Draw the Cute Chunky Red & Yellow Lawn Mower!
+        // 5. Draw the Husqvarna Orange Riding Lawn Mower + Side-Chute Spray!
         drawLawnMower(state.mower);
 
         // 6. Draw Grass Clippings & Sparkle Particles
@@ -1658,8 +1661,69 @@
         ctx.fillText('☀️', 0, 0);
         ctx.restore();
       }
-/** Draw a top-down Husqvarna orange riding lawn mower */
+
+      /** Spawn and animate green grass clippings shooting out the right-side chute */
+      function updateAndDrawChuteSpray(m) {
+        // 1. Only spray new clippings while the mower is driving
+        if (m.moving) {
+          // Find the exact world position of the right-side discharge chute
+          const chuteX = m.x - Math.sin(m.angle) * 33;
+          const chuteY = m.y + Math.cos(m.angle) * 33;
+
+          // Spray direction is 90 degrees (Math.PI / 2) to the right of the mower
+          const baseSprayAngle = m.angle + Math.PI / 2;
+          const greens = ['#4cd137', '#7bed9f', '#2ecc71', '#a3cb38', '#38b000'];
+
+          // Create 3 fresh grass blades per frame
+          for (let i = 0; i < 3; i++) {
+            const spread = (Math.random() - 0.5) * 0.65; // Slight fan-out spray
+            const speed = 2.2 + Math.random() * 3.4;
+            const angle = baseSprayAngle + spread;
+
+            chuteClippings.push({
+              x: chuteX + (Math.random() - 0.5) * 6,
+              y: chuteY + (Math.random() - 0.5) * 6,
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed,
+              rot: Math.random() * Math.PI * 2,
+              vRot: (Math.random() - 0.5) * 0.3,
+              len: 5 + Math.random() * 6,
+              life: 1.0,
+              color: greens[Math.floor(Math.random() * greens.length)]
+            });
+          }
+        }
+
+        // 2. Move, slow down, spin, and draw each clipping
+        for (let i = chuteClippings.length - 1; i >= 0; i--) {
+          const p = chuteClippings[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vx *= 0.91; // Air resistance slows the clippings down
+          p.vy *= 0.91;
+          p.rot += p.vRot;
+          p.life -= 0.032; // Fade out smoothly
+
+          // Remove clipping once it completely fades away
+          if (p.life <= 0) {
+            chuteClippings.splice(i, 1);
+            continue;
+          }
+
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, p.life);
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.len / 2, -1.5, p.len, 3);
+          ctx.restore();
+        }
+      }
+
+      /** Draw a top-down Husqvarna orange riding lawn mower */
       function drawLawnMower(m) {
+        updateAndDrawChuteSpray(m);
+
         ctx.save();
         ctx.translate(m.x, m.y);
 
@@ -1780,6 +1844,7 @@
 
         ctx.restore();
       }
+
       /** Cross-browser rounded rectangle helper */
       function roundRect(context, x, y, w, h, r) {
         context.beginPath();
